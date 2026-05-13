@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Librarian Command Center</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; color: #1a202c; padding: 40px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; }
+        .header h1 { color: #2b6cb0; }
+        .logout-btn { background-color: #e53e3e; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; font-weight: bold;}
+        
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px;}
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 4px solid #3182ce;}
+        .card.warning { border-top: 4px solid #ed8936; } 
+        .card h2 { margin-bottom: 20px; font-size: 20px; color: #2d3748; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 14px; color: #4a5568;}
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-family: 'Inter';}
+        .number-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        .submit-btn { width: 100%; padding: 12px; background-color: #38a169; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.3s;}
+        .submit-btn:hover { background-color: #2f855a; }
+        .lookup-btn { background-color: #ecc94b; color: #744210; }
+        .lookup-btn:hover { background-color: #d69e2e; }
+        .return-btn { background-color: #ed8936; padding: 6px 12px; border:none; color:white; border-radius:4px; cursor:pointer;}
+        
+        .statusMessage { margin-top: 15px; font-weight: bold; text-align: center; min-height: 20px; font-size: 14px;}
+
+        /* Mini Table for Member Lookups */
+        .mini-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; }
+        .mini-table th, .mini-table td { padding: 8px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+
+        .inventory-section { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .inventory-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        .inventory-table th, .inventory-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .inventory-table th { background-color: #f7fafc; color: #4a5568; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; background-color: #ebf8f6; color: #319795; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Librarian Command Center</h1>
+        <a href="/" class="logout-btn" onclick="localStorage.clear()">Logout</a>
+    </div>
+
+    <div class="dashboard-grid">
+        
+        <div class="card warning">
+            <h2>📥 Process Member Return</h2>
+            <div class="form-group">
+                <label>Member User ID</label>
+                <input type="text" id="lookup_userId" placeholder="e.g. USR-A1B2">
+            </div>
+            <button class="submit-btn lookup-btn" onclick="lookupMember()">Lookup Member Records</button>
+            <div id="msg_return" class="statusMessage"></div>
+            
+            <div id="member_records_area"></div>
+        </div>
+
+        <div class="card">
+            <h2>➕ Add New Book</h2>
+            <div class="form-group"><label>Title</label><input type="text" id="b_title"></div>
+            <div class="number-row">
+                <div class="form-group"><label>Author</label><input type="text" id="b_author"></div>
+                <div class="form-group"><label>ISBN</label><input type="text" id="b_isbn"></div>
+            </div>
+            <div class="number-row">
+                <div class="form-group"><label>Publisher</label><input type="text" id="b_pub"></div>
+                <div class="form-group"><label>Genre</label><input type="text" id="b_genre"></div>
+            </div>
+            <div class="number-row">
+                <div class="form-group"><label>Year</label><input type="number" id="b_year"></div>
+                <div class="form-group"><label>Total Copies</label><input type="number" id="b_copies"></div>
+            </div>
+            <button class="submit-btn" onclick="addBook()">Save to Catalog</button>
+            <div id="msg_book" class="statusMessage"></div>
+        </div>
+
+        <div class="card">
+            <h2>👤 Register New Member</h2>
+            <div class="number-row">
+                <div class="form-group"><label>First Name</label><input type="text" id="m_first_name"></div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="m_last_name"></div>
+            </div>
+            <div class="form-group"><label>Email</label><input type="email" id="m_email"></div>
+            <div class="number-row">
+                <div class="form-group"><label>Phone</label><input type="text" id="m_phone"></div>
+                <div class="form-group"><label>Temporary Password</label><input type="password" id="m_pass"></div>
+            </div>
+            <div class="form-group"><label>Full Address</label><input type="text" id="m_address"></div>
+            
+            <button class="submit-btn" onclick="registerAccount('members', 'm_')">Create Member Account</button>
+            <div id="msg_members" class="statusMessage"></div>
+        </div>
+
+        <div class="card">
+            <h2>🛡️ Register Librarian</h2>
+            <div class="number-row">
+                <div class="form-group"><label>First Name</label><input type="text" id="l_first_name"></div>
+                <div class="form-group"><label>Last Name</label><input type="text" id="l_last_name"></div>
+            </div>
+            <div class="form-group"><label>Email</label><input type="email" id="l_email"></div>
+            <div class="number-row">
+                <div class="form-group"><label>Phone</label><input type="text" id="l_phone"></div>
+                <div class="form-group"><label>Temporary Password</label><input type="password" id="l_pass"></div>
+            </div>
+            <div class="form-group"><label>Full Address</label><input type="text" id="l_address"></div>
+
+            <button class="submit-btn" style="background-color: #2b6cb0;" onclick="registerAccount('librarians', 'l_')">Create Admin Account</button>
+            <div id="msg_librarians" class="statusMessage"></div>
+        </div>
+
+    </div>
+
+    <div class="inventory-section">
+        <h2>📚 Current Library Inventory</h2>
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>Book ID</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Avail/Total</th>
+                </tr>
+            </thead>
+            <tbody id="inventoryBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // 1. LOOKUP MEMBER BOOKS
+        async function lookupMember() {
+            const uId = document.getElementById('lookup_userId').value;
+            const recordsArea = document.getElementById('member_records_area');
+            const msg = document.getElementById('msg_return');
+            
+            if(!uId) { msg.innerText = "❌ Please enter a Member ID."; msg.style.color = "red"; return; }
+            msg.innerText = "";
+            recordsArea.innerHTML = "<p style='text-align:center'>Loading records...</p>";
+
+            try {
+                // Reusing the endpoint we built for the Member Dashboard!
+                const res = await fetch(`/api/borrowed/${uId}`);
+                const books = await res.json();
+
+                if (books.length === 0) {
+                    recordsArea.innerHTML = `<p style="text-align:center; color:#718096; margin-top:10px;">User ${uId} has no active borrow records.</p>`;
+                    return;
+                }
+
+                // Build a mini-table to show what they have
+                let tableHTML = `
+                    <table class="mini-table">
+                        <tr><th>Title</th><th>Due Date</th><th>Current Fine</th><th>Action</th></tr>
+                `;
+                books.forEach(b => {
+                    // Check if there is a fine, and style it in red if there is!
+                    const fineText = b.fineDue > 0 
+                        ? `<span style="color:#e53e3e; font-weight:bold;">$${b.fineDue.toFixed(2)}</span>` 
+                        : `<span style="color:#38a169;">$0.00</span>`;
+
+                    tableHTML += `
+                        <tr>
+                            <td><strong>${b.title}</strong><br><span style="font-size:11px; color:#a0aec0;">${b.bookId}</span></td>
+                            <td style="color:#4a5568;">${b.dueDate}</td>
+                            <td>${fineText}</td>
+                            <td><button class="return-btn" onclick="processReturn('${uId}', '${b.bookId}')">Return</button></td>
+                        </tr>
+                    `;
+                });
+                tableHTML += `</table>`;
+                recordsArea.innerHTML = tableHTML;
+
+            } catch (err) { recordsArea.innerHTML = "<p style='color:red;'>Server Error.</p>"; }
+        }
+
+        // 2. PROCESS RETURN (Triggered by the button in the mini-table)
+        async function processReturn(uId, bId) {
+            const msg = document.getElementById('msg_return');
+            msg.style.color = "#4a5568";
+            msg.innerText = "Processing return...";
+
+            try {
+                const res = await fetch('/api/return', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: uId, bookId: bId })
+                });
+                const data = await res.json();
+                
+                msg.style.color = res.ok ? "#38a169" : "#e53e3e";
+                msg.innerText = res.ok ? `✅ ${data.message}` : `❌ ${data.message}`;
+                
+                if(res.ok) {
+                    lookupMember(); // Refresh the mini-table!
+                    loadInventory(); // Refresh the main inventory table!
+                }
+            } catch (err) { msg.innerText = "❌ Server Error."; msg.style.color = "red"; }
+        }
+
+        // 3. REGISTER ACCOUNTS LOGIC (Updated with 6 fields!)
+        async function registerAccount(type, prefix) {
+            const payload = {
+                first_name: document.getElementById(prefix+'first_name').value,
+                last_name: document.getElementById(prefix+'last_name').value,
+                email: document.getElementById(prefix+'email').value,
+                phone: document.getElementById(prefix+'phone').value,
+                password: document.getElementById(prefix+'pass').value,
+                address: document.getElementById(prefix+'address').value
+            };
+            const msg = document.getElementById('msg_'+type);
+            msg.innerText = "Saving...";
+
+            try {
+                const res = await fetch(`/api/${type}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                msg.style.color = res.ok ? "#38a169" : "#e53e3e";
+                msg.innerText = res.ok ? `✅ ${data.message}` : `❌ ${data.message}`;
+                
+                if(res.ok) {
+                    ['first_name', 'last_name', 'email', 'phone', 'pass', 'address'].forEach(f => document.getElementById(prefix+f).value = '');
+                }
+            } catch (err) { msg.innerText = "❌ Server Error."; msg.style.color="red";}
+        }
+
+        // 4. ADD BOOK LOGIC
+        async function addBook() {
+            const payload = {
+                title: document.getElementById('b_title').value,
+                author: document.getElementById('b_author').value,
+                isbn: document.getElementById('b_isbn').value,
+                publisher: document.getElementById('b_pub').value,
+                genre: document.getElementById('b_genre').value,
+                year: document.getElementById('b_year').value,
+                copies: document.getElementById('b_copies').value,
+                available_copies: document.getElementById('b_copies').value 
+            };
+            const msg = document.getElementById('msg_book');
+            msg.innerText = "Saving...";
+
+            try {
+                const res = await fetch('/api/books', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                msg.style.color = res.ok ? "#38a169" : "#e53e3e";
+                msg.innerText = res.ok ? `✅ ${data.message}` : `❌ ${data.message}`;
+                
+                if(res.ok) {
+                    ['title', 'author', 'isbn', 'pub', 'genre', 'year', 'copies'].forEach(f => document.getElementById('b_'+f).value = '');
+                    loadInventory(); 
+                }
+            } catch (err) { msg.innerText = "❌ Server Error."; msg.style.color="red";}
+        }
+
+        // 5. LOAD INVENTORY LOGIC
+        async function loadInventory() {
+            const tbody = document.getElementById('inventoryBody');
+            try {
+                const res = await fetch('/api/books');
+                const books = await res.json();
+                tbody.innerHTML = '';
+                books.forEach(b => {
+                    tbody.innerHTML += `<tr>
+                        <td style="font-family:monospace; color:#4a5568;">${b.id}</td>
+                        <td><strong>${b.title}</strong></td>
+                        <td>${b.author}</td>
+                        <td><span class="badge">${b.available} / ${b.total}</span></td>
+                    </tr>`;
+                });
+            } catch (err) { tbody.innerHTML = "<tr><td colspan='4'>Error loading data.</td></tr>"; }
+        }
+
+        window.onload = loadInventory;
+    </script>
+
+</body>
+</html>
