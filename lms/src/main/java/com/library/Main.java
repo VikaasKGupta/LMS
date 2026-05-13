@@ -26,6 +26,7 @@ public class Main {
         }).start("0.0.0.0", port);
 
         System.out.println("LMS Web Server is running at http://localhost:" + port);
+        
 
         // ==========================================
         // REST API ENDPOINTS
