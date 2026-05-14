@@ -44,15 +44,17 @@ public class Main {
                     System.out.println("[DEBUG] Step 6: BCrypt hash generated successfully. Length: " + newHash.length());
                     
                     // NOTE: Make sure these columns match your Railway Database exactly!
-                    String insertSql = "INSERT INTO librarian_details (name, email, phone, password, address) VALUES (?, ?, ?, ?, ?)";
+                    String insertSql = "INSERT INTO librarian_details (librarianId, first_name, last_name, email, phone_number, password, address) VALUES (?, ?, ?, ?, ?)";
                     System.out.println("[DEBUG] Step 7: Preparing INSERT statement...");
                     
                     try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-                        insertStmt.setString(1, "Super Admin");
-                        insertStmt.setString(2, "admin@library.com");
-                        insertStmt.setString(3, "0000000000");
-                        insertStmt.setString(4, newHash); 
-                        insertStmt.setString(5, "Library HQ");
+                        insertStmt.setString(1, "saanya");
+                        insertStmt.setString(2, "Aanya");
+                        insertStmt.setString(3, "Singh");
+                        insertStmt.setString(4, "saanya@gmail.com");
+                        insertStmt.setString(5, "555-1234");
+                        insertStmt.setString(6, newHash);
+                        insertStmt.setString(7, "Library HQ");
                         
                         System.out.println("[DEBUG] Step 8: Executing INSERT statement now...");
                         int rowsAffected = insertStmt.executeUpdate();
