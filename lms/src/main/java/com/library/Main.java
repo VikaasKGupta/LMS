@@ -5,6 +5,13 @@ import io.javalin.http.staticfiles.Location;
 import java.util.Map;
 import java.util.List;
 
+// --- NEW IMPORTS ADDED FOR THE SETUP SCRIPT ---
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import org.mindrot.jbcrypt.BCrypt;
+
 public class Main {
     public static void main(String[] args) {
         
@@ -13,6 +20,43 @@ public class Main {
         LibrarianDAO librarianDAO = new LibrarianDAO();
         BookDAO bookDAO = new BookDAO();
         TransactionDAO transactionDAO = new TransactionDAO();
+
+        // ==========================================
+        // AUTOMATED ADMIN SETUP SCRIPT
+        // ==========================================
+        try (Connection conn = createDBConnection.getConnection()) { 
+            String checkSql = "SELECT * FROM librarian_details WHERE email = 'admin@library.com'";
+            try (PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+                 ResultSet rs = checkStmt.executeQuery()) {
+                
+                // If the account does NOT exist, create it!
+                if (!rs.next()) {
+                    System.out.println("No admin account found. Creating one now...");
+                    
+                    String plainTextPassword = "admin123";
+                    String newHash = BCrypt.hashpw(plainTextPassword, BCrypt.gensalt());
+                    
+                    String insertSql = "INSERT INTO librarian_details (first_name, last_name, email, phone, password, address) VALUES (?, ?, ?, ?, ?, ?)";
+                    try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+                        insertStmt.setString(1, "Super");
+                        insertStmt.setString(2, "Admin");
+                        insertStmt.setString(3, "admin@library.com");
+                        insertStmt.setString(4, "0000000000");
+                        insertStmt.setString(5, newHash); 
+                        insertStmt.setString(6, "Library HQ");
+                        insertStmt.executeUpdate();
+                        System.out.println("Admin account created successfully!");
+                    }
+                } else {
+                    System.out.println("Admin account already exists. Skipping setup.");
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("Database script skipped or failed: " + e.getMessage());
+        }
+        // ==========================================
+
+
         // 2. Start the Javalin Web Server on port 7070
         int port = System.getenv("PORT") != null ? Integer.parseInt(System.getenv("PORT")) : 7070;
         Javalin app = Javalin.create(config -> {
@@ -58,6 +102,7 @@ public class Main {
                 }
             }
         });
+        
         app.post("/api/books", ctx -> {
             Map<String, String> bookData = ctx.bodyAsClass(Map.class);
             
@@ -79,12 +124,14 @@ public class Main {
                 ctx.status(500).json(Map.of("status", "error", "message", "Database error. Could not add book."));
             }
         });
+        
         // 3. Get All Books API
         app.get("/api/books", ctx -> {
             // Call your newly modified method!
             List<Map<String, Object>> books = bookDAO.viewAllBooks();
             ctx.json(books);
         });
+        
         app.post("/api/borrow", ctx -> {
             Map<String, String> requestData = ctx.bodyAsClass(Map.class);
             String userId = requestData.get("userId");
@@ -99,6 +146,7 @@ public class Main {
                 ctx.status(400).json(Map.of("status", "error", "message", "Book is unavailable or an error occurred."));
             }
         });
+        
         // 5. Get Borrowed Books API (For the Member Dashboard)
         app.get("/api/borrowed/{userId}", ctx -> {
             // Javalin reads the {userId} directly from the URL!
@@ -107,7 +155,6 @@ public class Main {
             ctx.json(borrowedBooks);
         });
 
-        // 6. Return Book API
         // 6. Return Book API (Now with Fine Calculation!)
         app.post("/api/return", ctx -> {
             Map<String, String> requestData = ctx.bodyAsClass(Map.class);
@@ -129,6 +176,7 @@ public class Main {
                 ctx.status(400).json(Map.of("status", "error", "message", "Could not process return."));
             }
         });
+        
         // 7. Register New Member API
         app.post("/api/members", ctx -> {
             Map<String, String> data = ctx.bodyAsClass(Map.class);
@@ -159,8 +207,5 @@ public class Main {
                 ctx.status(400).json(Map.of("status", "error", "message", "Email already exists or error occurred."));
             }
         });
-        
-        
-
     }
 }
