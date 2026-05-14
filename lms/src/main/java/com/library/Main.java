@@ -21,38 +21,65 @@ public class Main {
         BookDAO bookDAO = new BookDAO();
         TransactionDAO transactionDAO = new TransactionDAO();
 
+       // ==========================================
+        // AUTOMATED ADMIN SETUP SCRIPT (WITH DEBUGGING)
         // ==========================================
-        // AUTOMATED ADMIN SETUP SCRIPT
-        // ==========================================
+        System.out.println("[DEBUG] Step 1: Attempting to connect to database...");
         try (Connection conn = createDBConnection.getConnection()) { 
+            System.out.println("[DEBUG] Step 2: Database connection successful!");
+            
             String checkSql = "SELECT * FROM librarian_details WHERE email = 'admin@library.com'";
+            System.out.println("[DEBUG] Step 3: Executing SELECT query to check for existing admin...");
+            
             try (PreparedStatement checkStmt = conn.prepareStatement(checkSql);
                  ResultSet rs = checkStmt.executeQuery()) {
                 
-                // If the account does NOT exist, create it!
+                System.out.println("[DEBUG] Step 4: SELECT query executed.");
+                
                 if (!rs.next()) {
-                    System.out.println("No admin account found. Creating one now...");
+                    System.out.println("[DEBUG] Step 5: No admin account found. Proceeding to create one...");
                     
                     String plainTextPassword = "admin123";
                     String newHash = BCrypt.hashpw(plainTextPassword, BCrypt.gensalt());
+                    System.out.println("[DEBUG] Step 6: BCrypt hash generated successfully. Length: " + newHash.length());
                     
-                    String insertSql = "INSERT INTO librarian_details (first_name, last_name, email, phone, password, address) VALUES (?, ?, ?, ?, ?, ?)";
+                    // NOTE: Make sure these columns match your Railway Database exactly!
+                    String insertSql = "INSERT INTO librarian_details (name, email, phone, password, address) VALUES (?, ?, ?, ?, ?)";
+                    System.out.println("[DEBUG] Step 7: Preparing INSERT statement...");
+                    
                     try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-                        insertStmt.setString(1, "Super");
-                        insertStmt.setString(2, "Admin");
-                        insertStmt.setString(3, "admin@library.com");
-                        insertStmt.setString(4, "0000000000");
-                        insertStmt.setString(5, newHash); 
-                        insertStmt.setString(6, "Library HQ");
-                        insertStmt.executeUpdate();
-                        System.out.println("Admin account created successfully!");
+                        insertStmt.setString(1, "Super Admin");
+                        insertStmt.setString(2, "admin@library.com");
+                        insertStmt.setString(3, "0000000000");
+                        insertStmt.setString(4, newHash); 
+                        insertStmt.setString(5, "Library HQ");
+                        
+                        System.out.println("[DEBUG] Step 8: Executing INSERT statement now...");
+                        int rowsAffected = insertStmt.executeUpdate();
+                        
+                        System.out.println("[DEBUG] Step 9: INSERT executed. Rows affected: " + rowsAffected);
+                        if (rowsAffected > 0) {
+                            System.out.println("Admin account created successfully!");
+                        } else {
+                            System.out.println("[DEBUG] WARNING: Insert ran, but 0 rows were affected.");
+                        }
+                    } catch (SQLException e) {
+                        System.out.println("[DEBUG] FAILED AT STEP 8 (INSERT ERROR): " + e.getMessage());
+                        e.printStackTrace();
                     }
                 } else {
-                    System.out.println("Admin account already exists. Skipping setup.");
+                    System.out.println("[DEBUG] Step 5 (Alternate): Admin account already exists. Skipping setup.");
                 }
+            } catch (SQLException e) {
+                System.out.println("[DEBUG] FAILED AT STEP 3 (SELECT ERROR): " + e.getMessage());
+                e.printStackTrace();
             }
         } catch (SQLException e) {
-            System.out.println("Database script skipped or failed: " + e.getMessage());
+            System.out.println("[DEBUG] FAILED AT STEP 1 (CONNECTION ERROR): " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.out.println("[DEBUG] UNEXPECTED NON-SQL ERROR: " + e.getMessage());
+            e.printStackTrace();
         }
         // ==========================================
 
