@@ -44,7 +44,7 @@ public class Main {
                     System.out.println("[DEBUG] Step 6: BCrypt hash generated successfully. Length: " + newHash.length());
                     
                     // NOTE: Make sure these columns match your Railway Database exactly!
-                    String insertSql = "INSERT INTO librarian_details (librarianId, first_name, last_name, email, phone_number, password, address) VALUES (?, ?, ?, ?, ?)";
+                    String insertSql = "INSERT INTO librarian_details (librarianId, first_name, last_name, email, phone_number, password, address) VALUES (?, ?, ?, ?, ?, ?, ?)";
                     System.out.println("[DEBUG] Step 7: Preparing INSERT statement...");
                     
                     try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
